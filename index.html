@@ -6,40 +6,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
-    <script defer src="todo-app.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            createTodoApp(document.getElementById('todo-app'), 'Мои дела', 'my', [{
-                name: 'Сходить за хлебом',
-                done: true
-            }, {
-                name: 'Сходить за молоком',
-                done: true
-            }, {
-                name: 'Поесть',
-                done: false
-            }, {
-                name: 'Поспать',
-                done: false
-            }, {
-                name: 'Поели, можно снова поспать',
-                done: false
-            }, {
-                name: 'Поспали, можно снова поесть',
-                done: false
-            }, {
-                name: 'Приготовить лягушек',
-                done: true
-            }, {
-                done: true
-            }, {
-                name: '',
-                done: true
-            }, {
-                name: null,
-                done: true
-            }]);
-        });
+    <script type="module">
+        import { chooseStorageButtons } from './todo-app/view.js'; const owner = 'Я'; (async () => { chooseStorageButtons(owner); })();
     </script>
 </head>
 
@@ -51,6 +19,18 @@
             <a class="nav-link" href="mom.html">Дела мамы</a>
         </nav>
     </div>
+
+    <div class="container mb-5">
+        <div class="btn-group btn-group-toggle" data-toggle="buttons">
+            <label class="btn btn-secondary active label1">
+        <input type="radio" name="options" id="optionServer" autocomplete="off"> Local storage
+      </label>
+            <label class="btn btn-secondary label2">
+        <input type="radio" name="options" id="optionLocal" autocomplete="off"> Server
+      </label>
+        </div>
+    </div>
+
     <div id="todo-app" class="container"></div>
 </body>
 

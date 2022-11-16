@@ -38,6 +38,8 @@ function createTodoItemElement(todoItem, { onDone, onDelete }) {
 
     const doneClass = 'list-group-item-success';
 
+    let ownerID = todoItem.owner;
+
     let item = document.createElement('li');
     let buttonGroup = document.createElement('div');
     let doneButton = document.createElement('button');
@@ -72,39 +74,23 @@ function createTodoItemElement(todoItem, { onDone, onDelete }) {
     return item;
 };
 
-async function createTodoApp(container, title, owner) {
-
+async function createTodoApp(container, {
+    title,
+    owner,
+    todoItemList = [],
+    onCreateFormSubmit,
+    onDoneClick,
+    onDeleteClick,
+}) {
     const todoAppTitle = createAppTitle(title);
     const todoItemForm = createTodoItemForm();
     const todoList = createTodoList();
-    const handlers = {
-        onDone({ todoItem }) {
-            todoItem.done = !todoItem.done;
-            fetch(`http://localhost:3000/api/todos/${todoItem.id}`, {
-                method: 'PATCH',
-                body: JSON.stringify({ done: todoItem.done }),
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
-        },
-        onDelete({ todoItem, element }) {
-            if (!confirm('Вы уверены?')) {
-                item.remove();
-            }
-            element.remove();
-            fetch(`http://localhost:3000/api/todos/${todoItem.id}`, {
-                method: 'DELETE',
-            });
-        },
-    };
+    const handlers = { onDone: onDoneClick, onDelete: onDeleteClick };
+
 
     container.append(todoAppTitle);
     container.append(todoItemForm.form);
     container.append(todoList);
-
-    const response = await fetch(`http://localhost:3000/api/todos?owner=${owner}`);
-    const todoItemList = await response.json();
 
     todoItemList.forEach(todoItem => {
         const todoItemElement = createTodoItemElement(todoItem, handlers);
@@ -117,17 +103,10 @@ async function createTodoApp(container, title, owner) {
             return;
         }
 
-        const response = await fetch('http://localhost:3000/api/todos', {
-            method: 'POST',
-            body: JSON.stringify({
-                name: todoItemForm.input.value.trim(),
-                owner,
-            }),
-            headers: {
-                'Content-Type': 'application/json',
-            }
+        const todoItem = await onCreateFormSubmit({
+            owner,
+            name: todoItemForm.input.value.trim(),
         });
-        const todoItem = await response.json();
 
         const todoItemElement = createTodoItemElement(todoItem, handlers);
 
@@ -136,6 +115,40 @@ async function createTodoApp(container, title, owner) {
     });
 };
 
+async function initApp(importName, owner) {
+    const module = await
+    import ('./' + importName + '.js');
+    let todoItemList = await module.getTodoList(owner);
+    createTodoApp(document.getElementById('todo-app'), { title: 'Мои дела', owner, todoItemList, onCreateFormSubmit: module.createTodoItem, onDoneClick: module.switchTodoItemDone, onDeleteClick: module.deleteTodoItem, });
+}
 
+export async function chooseStorageButtons(owner) {
+    const serverButton = document.querySelector('#optionServer');
+    const localButton = document.querySelector('#optionLocal');
+    const serverLabel = document.querySelector('.label1');
+    const localLabel = document.querySelector('.label2');
 
-export { createTodoApp };
+    if (localStorage.getItem('SAVEDOPTION') != null) {
+        initApp(localStorage.getItem('SAVEDOPTION'), owner);
+        if (localStorage.getItem('SAVEDOPTION') === 'api') {
+            localButton.cheked = false;
+            localLabel.classList.toggle('active');
+            serverButton.cheked = true;
+            serverLabel.classList.toggle('active');
+        }
+    } else {
+        initApp('local', owner);
+    }
+
+    serverButton.addEventListener('input', async() => {
+        localStorage.setItem('SAVEDOPTION', 'local');
+        location.reload();
+
+    });
+
+    localButton.addEventListener('input', async() => {
+        localStorage.setItem('SAVEDOPTION', 'api');
+        location.reload();
+
+    });
+}
